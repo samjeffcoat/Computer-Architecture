@@ -17,6 +17,7 @@ class CPU:
             "HLT": 0b00000001,
             "PRN": 0b01000111,
             "ADD": 0b10100000,
+            "MUL": 0b10100010,
         }
 
     # should accept the address to read and return the value stored there.
@@ -31,26 +32,25 @@ class CPU:
     def load(self, filename):
         """Load a program into memory."""
 
-
-        try: 
+        try:
             address = 0
 
         # For now, we've just hardcoded a program:
-            with open(filename) as f: 
+            with open(filename) as f:
                 for line in f:
-                    comment_split= line.split("#")
+                    comment_split = line.split("#")
                     num = comment_split[0].strip()
 
                     try:
-                        val= int(num, 2)
+                        val = int(num, 2)
                     except ValueError:
                         continue
-                    self.ram[address]= val
-                    address +=1
+                    self.ram[address] = val
+                    address += 1
 
         except FileNotFoundError:
-                print(f"{sys.argv[0]}: {sys.argv[1]} not found")
-                sys.exit(2)
+            print(f"{sys.argv[0]}: {sys.argv[1]} not found")
+            sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -58,6 +58,9 @@ class CPU:
         if op == self.operations["ADD"]:
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == self.operations["MUL"]:
+            mul = self.reg[reg_a] * self.reg[reg_b]
+            self.reg[reg_a] = mul
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -92,15 +95,18 @@ class CPU:
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
-            if IR == self.operations["LDI"]: #loads data onto the register
+            if IR == self.operations["LDI"]:  # loads data onto the register
                 self.reg[operand_a] = operand_b
                 self.pc += 3
 
-            elif IR == self.operations["PRN"]: #prints 
+            elif IR == self.operations["PRN"]:  # prints
                 print(self.reg[operand_a])
                 self.pc += 2
-            elif IR == self.operations["HLT"]: # stops or exits the program 
+            elif IR == self.operations["HLT"]:  # stops or exits the program
                 running = False
+            elif IR == self.operations["MUL"]:
+                self.alu(self.operations["MUL"], operand_a, operand_b)
+                self.pc += 3
 
         else:
             print(f"Unknown instruction: {self.ram[self.pc]}")

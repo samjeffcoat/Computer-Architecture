@@ -18,7 +18,10 @@ class CPU:
             "PRN": 0b01000111,
             "ADD": 0b10100000,
             "MUL": 0b10100010,
+            "PUSH": 0b01000101,
+            "POP": 0b01000110,
         }
+        self.sp = 0xF4
 
     # should accept the address to read and return the value stored there.
     def ram_read(self, MAR):  # The MAR contains the address that is being read or written to
@@ -89,8 +92,10 @@ class CPU:
 
         # It needs to read the memory address that's stored in register `PC`
         # store that result in `IR
+        # self.trace()
         running = True
         while running:
+            #self.trace()
             IR = self.ram[self.pc]
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
@@ -108,6 +113,17 @@ class CPU:
                 self.alu(self.operations["MUL"], operand_a, operand_b)
                 self.pc += 3
 
-        else:
-            print(f"Unknown instruction: {self.ram[self.pc]}")
-            sys.exit(1)
+            elif IR == self.operations["PUSH"]:
+                self.sp = (self.sp-1) & 0xFF
+                self.ram[self.sp] = self.reg[operand_a]
+                self.pc += 2
+
+            # pop the value of the 7th register // ram read ram write
+            elif IR == self.operations["POP"]:
+                self.reg[operand_a] = self.ram[self.sp]
+                self.sp = (self.sp + 1) & 0xFF
+                self.pc += 2
+
+            else:
+                print(f"Unknown instruction: {self.ram[self.pc]}")
+                sys.exit(1)

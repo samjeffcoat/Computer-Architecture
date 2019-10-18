@@ -214,7 +214,7 @@ Extend your LS8 emulator to support the following program:
 
 ```
 # mult.ls8: Multiply 8x9 and print 72
-
+s
 10000010 # LDI R0,8
 00000000
 00001000
